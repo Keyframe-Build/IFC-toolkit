@@ -40,6 +40,8 @@ namespace Ara3D.IfcParser
         {
             Document = d;
 
+            var publishedLeafIds = new HashSet<uint>();
+
             logger?.Log("Computing entities");
             foreach (var inst in Document.RawInstances)
             {
@@ -160,7 +162,36 @@ namespace Ara3D.IfcParser
                     var e = d.GetInstanceWithData(inst);
                     AddRelation(new IfcRelationType(this, e, (StepId)e[5], (StepList)e[4]));
                 }
-
+                else if (inst.Type.Equals("IFCPROJECT"))
+                {
+                    var e = d.GetInstanceWithData(inst);
+                    AddNode(new IfcContext(this, e));
+                    publishedLeafIds.Add(e.Id);
+                }
+                else if (inst.Type.Equals("IFCSITE"))
+                {
+                    var e = d.GetInstanceWithData(inst);
+                    AddNode(new IfcSite(this, e));
+                    publishedLeafIds.Add(e.Id);
+                }
+                else if (inst.Type.Equals("IFCGEOMETRICREPRESENTATIONCONTEXT"))
+                {
+                    var e = d.GetInstanceWithData(inst);
+                    AddNode(new IfcGeometricRepresentationContext(this, e));
+                    publishedLeafIds.Add(e.Id);
+                }
+                else if (inst.Type.Equals("IFCMAPCONVERSION"))
+                {
+                    var e = d.GetInstanceWithData(inst);
+                    AddNode(new IfcMapConversion(this, e));
+                    publishedLeafIds.Add(e.Id);
+                }
+                else if (inst.Type.Equals("IFCPROJECTEDCRS"))
+                {
+                    var e = d.GetInstanceWithData(inst);
+                    AddNode(new IfcProjectedCRS(this, e));
+                    publishedLeafIds.Add(e.Id);
+                }
                 // Everything else 
                 else
                 {
@@ -171,10 +202,15 @@ namespace Ara3D.IfcParser
             }
 
             logger?.Log("Retrieving the roots of all of the spatial relationship");
-            RootIds = GetSpatialRelations()
-                .Where(r => r.From != null)
-                .Select(r => (uint)r.From.Id)
-                .Distinct().ToList();
+            var rootIds = new HashSet<uint>();
+
+            publishedLeafIds.UnionWith(GetSpatialRelations().Where(r => r.From != null).Select(r => r.From.Id));
+            foreach (var id in publishedLeafIds)
+            {
+                TraceUpward(id, rootIds);
+            }
+
+            RootIds = rootIds.ToList();
 
             logger?.Log("Creating lookup of property sets");
 
@@ -188,6 +224,25 @@ namespace Ara3D.IfcParser
             }
 
             logger?.Log("Completed creating model graph");
+        }
+
+        private void TraceUpward(uint id, HashSet<uint> rootIds)
+        {
+            Nodes[id].Published = true;
+
+            var parentIds = Relations.Where(r => r.To.Values.Contains(new StepId(id))).Select(r => r.From.Id).Distinct().ToList();
+
+            if (parentIds.Count == 0)
+            {
+                rootIds.Add(id);
+            }
+            else
+            {
+                foreach (var parentId in parentIds)
+                {
+                    TraceUpward(parentId, rootIds);
+                }
+            }
         }
 
         public IEnumerable<IfcNode> GetNodes()
