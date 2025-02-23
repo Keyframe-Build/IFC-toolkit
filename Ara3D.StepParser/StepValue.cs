@@ -108,6 +108,23 @@ namespace Ara3D.StepParser
         }
     }
 
+    public class StepInteger : StepValue
+    {
+        public readonly ByteSpan Span;
+        public int Value => Span.ToInt();
+
+        public StepInteger(ByteSpan span) => Span = span;
+
+        public override string ToString() => $"{Value}";
+
+        public static StepInteger Create(StepToken token)
+        {
+            Debug.Assert(token.Type == StepTokenType.Number);
+            var span = token.Span;
+            return new(span);
+        }
+    }
+
     public class StepId : StepValue
     {
         public readonly uint Id;
