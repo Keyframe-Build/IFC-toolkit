@@ -14,15 +14,5 @@ public class IfcMapConversion : IfcCoordinateOperation
   public IfcMapConversion(IfcGraph graph, StepInstance lineData)
     : base(graph, lineData)
   {
-    if (SourceCRS is not null)
-    {
-      // Add this map conversion as a child of the geometric representation context
-      graph.AddRelation(new IfcRelation(graph, lineData, SourceCRS, new StepList(new StepId(Id).AsList())));
-    }
-    if (TargetCRS is not null)
-    {
-      // Add this map conversion as a child of the geometric representation context
-      graph.AddRelation(new IfcRelation(graph, lineData, new StepId(Id), new StepList(TargetCRS.AsList())));
-    }
   }
 }
