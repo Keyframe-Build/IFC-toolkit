@@ -149,6 +149,20 @@ namespace Ara3D.StepParser
             }
             return new StepId(id);
         }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is StepId other)
+            {
+                return Id == other.Id;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
     }
 
     public class StepUnassigned : StepValue
