@@ -8,6 +8,7 @@ namespace Ara3D.IfcParser.Test
     {
         public static ILogger CreateLogger() => new Logger(LogWriter.ConsoleWriter, "");
         public static FilePath AC20Haus => InputFolder.RelativeFile("AC20-FZK-Haus.ifc");
+        public static FilePath Issue159Klein => InputFolder.RelativeFile("ISSUE_159_klein_Wohnung_R22.ifc");
         public static DirectoryPath InputFolder => PathUtil.GetCallerSourceFolder().RelativeFolder("..", "test-files");
         public static IReadOnlyList<FilePath> Files => InputFolder.GetFiles("*.ifc").ToList();
 
