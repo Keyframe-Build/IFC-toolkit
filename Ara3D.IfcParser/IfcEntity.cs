@@ -73,7 +73,7 @@ namespace Ara3D.IfcParser
             => GetOutgoingRelations().OfType<IfcRelationSpatial>().SelectMany(r => r.GetRelatedNodes());
 
         public IEnumerable<IfcNode> GetChildren()
-            => GetAggregatedChildren().Concat(GetSpatialChildren());
+            => GetAggregatedChildren().Concat(GetSpatialChildren()).Distinct();
 
         public IReadOnlyList<IfcPropSet> GetPropSets()
             => Graph.PropertySetsByNode.TryGetValue(Id, out var list) ? list : Array.Empty<IfcPropSet>();

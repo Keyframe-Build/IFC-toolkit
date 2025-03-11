@@ -16,8 +16,6 @@ namespace Ara3D.IfcParser
         public IfcRelation(IfcGraph graph, StepInstance lineData, StepId from, StepList to)
             : base(graph, lineData)
         {
-            if (!IsIfcRoot)
-                throw new System.Exception("Expected relation to be an IFC root entity");
             From = from;
             To = to;
         }

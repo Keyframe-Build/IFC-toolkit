@@ -38,8 +38,8 @@ namespace Ara3D.IfcParser
 
         public static List<StepValue> AsList(this StepValue value)
             => value is StepUnassigned
-                ? new List<StepValue>()
-                : ((StepList)value).Values;
+                ? new List<StepValue>() 
+                : new List<StepValue>() { value };
 
         public static List<uint> AsIdList(this StepValue value)
             => value is StepUnassigned
