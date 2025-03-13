@@ -30,19 +30,16 @@ namespace Ara3D.StepParser
             Attributes = attributes;
         }
 
-        public override string ToString()
-            => $"{EntityType}{Attributes}";
+        public override string ToString() => $"{EntityType}{Attributes}";
     }
 
     public class StepList : StepValue
     {
         public readonly List<StepValue> Values;
 
-        public StepList(List<StepValue> values)
-            => Values = values;
+        public StepList(List<StepValue> values) => Values = values;
 
-        public override string ToString()
-            => $"({Values.JoinStringsWithComma()})";
+        public override string ToString() => $"({Values.JoinStringsWithComma()})";
 
         public static StepList Default = new(new List<StepValue>());
     }
@@ -61,22 +58,18 @@ namespace Ara3D.StepParser
             return new StepString(span.Trim(1, 1));
         }
 
-        public StepString(ByteSpan value)
-            => Value = value;
+        public StepString(ByteSpan value) => Value = value;
 
-        public override string ToString()
-            => $"'{Value}'";
+        public override string ToString() => $"'{Value}'";
     }
 
     public class StepSymbol : StepValue
     {
         public readonly ByteSpan Name;
 
-        public StepSymbol(ByteSpan name)
-            => Name = name;
+        public StepSymbol(ByteSpan name) => Name = name;
 
-        public override string ToString()
-            => $".{Name}.";
+        public override string ToString() => $".{Name}.";
 
         public static StepSymbol Create(StepToken token)
         {
@@ -94,11 +87,9 @@ namespace Ara3D.StepParser
         public readonly ByteSpan Span;
         public double Value => Span.ToDouble();
 
-        public StepNumber(ByteSpan span)
-            => Span = span;
+        public StepNumber(ByteSpan span) => Span = span;
 
-        public override string ToString()
-            => $"{Value}";
+        public override string ToString() => $"{Value}";
 
         public static StepNumber Create(StepToken token)
         {
@@ -129,11 +120,9 @@ namespace Ara3D.StepParser
     {
         public readonly uint Id;
 
-        public StepId(uint id)
-            => Id = id;
+        public StepId(uint id) => Id = id;
 
-        public override string ToString()
-            => $"#{Id}";
+        public override string ToString() => $"#{Id}";
 
         public static unsafe StepId Create(StepToken token)
         {
@@ -169,8 +158,7 @@ namespace Ara3D.StepParser
     {
         public static readonly StepUnassigned Default = new();
 
-        public override string ToString()
-            => "$";
+        public override string ToString() => "$";
 
         public static StepUnassigned Create(StepToken token)
         {
@@ -186,8 +174,7 @@ namespace Ara3D.StepParser
     {
         public static readonly StepRedeclared Default = new();
 
-        public override string ToString()
-            => "*";
+        public override string ToString() => "*";
 
         public static StepRedeclared Create(StepToken token)
         {

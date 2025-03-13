@@ -5,7 +5,7 @@
         public readonly uint Id;
         public readonly IntPtr ApiPtr;
         public readonly IntPtr MeshPtr;
-        
+
         public readonly int NumVertices;
         public readonly int NumIndices;
         public readonly IntPtr Vertices;

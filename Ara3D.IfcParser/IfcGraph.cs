@@ -1,8 +1,8 @@
-﻿using Ara3D.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Diagnostics;
+using System.Linq;
+using Ara3D.Logging;
 using Ara3D.StepParser;
 using Ara3D.Utils;
 
@@ -10,24 +10,25 @@ namespace Ara3D.IfcParser;
 
 /// <summary>
 /// This is a high-level representation of an IFC model as a graph of nodes and relations.
-/// It also contains the  properties, and property sets. 
+/// It also contains the  properties, and property sets.
 /// </summary>
 public class IfcGraph
 {
-    public static IfcGraph Load(FilePath fp, ILogger logger = null)
-        => new IfcGraph(new StepDocument(fp, logger), logger);
+    public static IfcGraph Load(FilePath fp, ILogger logger = null) =>
+        new IfcGraph(new StepDocument(fp, logger), logger);
 
     public StepDocument Document { get; }
 
     public Dictionary<uint, IfcNode> Nodes { get; } = new Dictionary<uint, IfcNode>();
     public List<IfcRelation> Relations { get; } = new List<IfcRelation>();
-    public Dictionary<uint, List<IfcRelation>> RelationsByNode { get; } = new Dictionary<uint, List<IfcRelation>>();
-    public Dictionary<uint, List<IfcPropSet>> PropertySetsByNode { get; } = new Dictionary<uint, List<IfcPropSet>>();
+    public Dictionary<uint, List<IfcRelation>> RelationsByNode { get; } =
+        new Dictionary<uint, List<IfcRelation>>();
+    public Dictionary<uint, List<IfcPropSet>> PropertySetsByNode { get; } =
+        new Dictionary<uint, List<IfcPropSet>>();
 
     public IReadOnlyList<uint> RootIds { get; }
 
-    public IfcNode AddNode(IfcNode n)
-        => Nodes[n.Id] = n;
+    public IfcNode AddNode(IfcNode n) => Nodes[n.Id] = n;
 
     public IfcRelation AddRelation(IfcRelation r)
     {
@@ -46,8 +47,8 @@ public class IfcGraph
             if (!inst.IsValid())
                 continue;
 
-            // TODO: converting entities into numerical hashes would likely improve performance significantly. 
-            // Here we are doing a lot of comparisons. 
+            // TODO: converting entities into numerical hashes would likely improve performance significantly.
+            // Here we are doing a lot of comparisons.
 
             // Property Values
             if (inst.Type.Equals("IFCPROPERTYSINGLEVALUE"))
@@ -115,7 +116,7 @@ public class IfcGraph
             }
             else if (inst.Type.Equals("IFCPHYSICALCOMPLEXQUANTITY"))
             {
-                //https://iaiweb.lbl.gov/Resources/IFC_Releases/R2x3_final/ifcquantityresource/lexical/ifcphysicalcomplexquantity.htm   
+                //https://iaiweb.lbl.gov/Resources/IFC_Releases/R2x3_final/ifcquantityresource/lexical/ifcphysicalcomplexquantity.htm
                 var e = d.GetInstanceWithData(inst);
                 AddNode(new IfcProp(this, e, e[2]));
             }
@@ -179,7 +180,7 @@ public class IfcGraph
                 var e = d.GetInstanceWithData(inst);
                 AddNode(new IfcProjectedCRS(this, e));
             }
-            // Everything else 
+            // Everything else
             else
             {
                 // Simple IFC node: without step entity data.
@@ -191,12 +192,16 @@ public class IfcGraph
         logger?.Log("Retrieving the roots of all of the spatial relationship");
 
         // Find the root identifiers using the aggregate and spatial relation mappings
-        RootIds = GetAggregateRelations().Concat<IfcRelation>(GetSpatialRelations())
+        RootIds = GetAggregateRelations()
+            .Concat<IfcRelation>(GetSpatialRelations())
             .Where(r => r.From != null)
             .Select(r => r.From.Id)
-            .Except(GetAggregateRelations().Concat<IfcRelation>(GetSpatialRelations())
-                .SelectMany<IfcRelation, StepId>(r => r.To.Values.OfType<StepId>())
-                    .Select(id => id.Id))
+            .Except(
+                GetAggregateRelations()
+                    .Concat<IfcRelation>(GetSpatialRelations())
+                    .SelectMany<IfcRelation, StepId>(r => r.To.Values.OfType<StepId>())
+                    .Select(id => id.Id)
+            )
             .Distinct()
             .ToList();
 
@@ -214,11 +219,9 @@ public class IfcGraph
         logger?.Log("Completed creating model graph");
     }
 
-    public IEnumerable<IfcNode> GetNodes()
-        => Nodes.Values;
+    public IEnumerable<IfcNode> GetNodes() => Nodes.Values;
 
-    public IEnumerable<IfcNode> GetNodes(IEnumerable<uint> ids)
-        => ids.Select(GetNode);
+    public IEnumerable<IfcNode> GetNodes(IEnumerable<uint> ids) => ids.Select(GetNode);
 
     public IfcNode GetOrCreateNode(StepInstance lineData, int arg)
     {
@@ -227,10 +230,10 @@ public class IfcGraph
         return GetOrCreateNode(lineData.AttributeValues[arg]);
     }
 
-    public IfcNode GetOrCreateNode(StepValue o)
-        => GetOrCreateNode(o is StepId id 
-            ? (uint)id.Id
-            : throw new Exception($"Expected a StepId value, not {o}"));
+    public IfcNode GetOrCreateNode(StepValue o) =>
+        GetOrCreateNode(
+            o is StepId id ? (uint)id.Id : throw new Exception($"Expected a StepId value, not {o}")
+        );
 
     public IfcNode GetOrCreateNode(uint id)
     {
@@ -241,8 +244,8 @@ public class IfcGraph
         return r;
     }
 
-    public List<IfcNode> GetOrCreateNodes(List<StepValue> list)
-        => list.Select(GetOrCreateNode).ToList();
+    public List<IfcNode> GetOrCreateNodes(List<StepValue> list) =>
+        list.Select(GetOrCreateNode).ToList();
 
     public List<IfcNode> GetOrCreateNodes(StepInstance line, int arg)
     {
@@ -253,8 +256,7 @@ public class IfcGraph
         return GetOrCreateNodes(agg.Values);
     }
 
-    public IfcNode GetNode(StepId id)
-        => GetNode(id.Id);
+    public IfcNode GetNode(StepId id) => GetNode(id.Id);
 
     public IfcNode GetNode(uint id)
     {
@@ -263,21 +265,18 @@ public class IfcGraph
         return r;
     }
 
-    public IEnumerable<IfcNode> GetSources()
-        => RootIds.Select(GetNode);
+    public IEnumerable<IfcNode> GetSources() => RootIds.Select(GetNode);
 
-    public IEnumerable<IfcPropSet> GetPropSets()
-        => GetNodes().OfType<IfcPropSet>();
+    public IEnumerable<IfcPropSet> GetPropSets() => GetNodes().OfType<IfcPropSet>();
 
-    public IEnumerable<IfcProp> GetProps()
-        => GetNodes().OfType<IfcProp>();
+    public IEnumerable<IfcProp> GetProps() => GetNodes().OfType<IfcProp>();
 
-    public IEnumerable<IfcRelationSpatial> GetSpatialRelations()
-        => Relations.OfType<IfcRelationSpatial>();
+    public IEnumerable<IfcRelationSpatial> GetSpatialRelations() =>
+        Relations.OfType<IfcRelationSpatial>();
 
-    public IEnumerable<IfcRelationAggregate> GetAggregateRelations()
-        => Relations.OfType<IfcRelationAggregate>();
+    public IEnumerable<IfcRelationAggregate> GetAggregateRelations() =>
+        Relations.OfType<IfcRelationAggregate>();
 
-    public IReadOnlyList<IfcRelation> GetRelationsFrom(uint id)
-        => RelationsByNode.TryGetValue(id, out var list) ? list : Array.Empty<IfcRelation>();
+    public IReadOnlyList<IfcRelation> GetRelationsFrom(uint id) =>
+        RelationsByNode.TryGetValue(id, out var list) ? list : Array.Empty<IfcRelation>();
 }

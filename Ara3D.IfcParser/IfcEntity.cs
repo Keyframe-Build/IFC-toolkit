@@ -31,51 +31,48 @@ namespace Ara3D.IfcParser
             return false;
         }
 
-        public override int GetHashCode()
-            => (int)Id;
+        public override int GetHashCode() => (int)Id;
 
-        public override string ToString()
-            => $"{Type}#{Id}";
+        public override string ToString() => $"{Type}#{Id}";
 
-        public bool IsIfcRoot
-            => Count >= 4
-               && this[0] is StepString str
-               && (this[1] is StepId) || (this[1] is StepUnassigned);
-            // Modern IFC files conform to this, but older ones have been observed to have different length IDs.
-            // Leaving as a comment for now. 
-            //&& str.Value.Length == 22;
+        public bool IsIfcRoot =>
+            Count >= 4 && this[0] is StepString str && (this[1] is StepId)
+            || (this[1] is StepUnassigned);
 
-        public string Guid
-            => IsIfcRoot ? (this[0] as StepString)?.Value.ToString() : null;
+        // Modern IFC files conform to this, but older ones have been observed to have different length IDs.
+        // Leaving as a comment for now.
+        //&& str.Value.Length == 22;
 
-        public uint OwnerId
-            => IsIfcRoot ? (this[1] as StepId)?.Id ?? 0 : 0;
+        public string Guid => IsIfcRoot ? (this[0] as StepString)?.Value.ToString() : null;
 
-        public string Name
-            => IsIfcRoot ? (this[2] as StepString)?.AsString() : null;
+        public uint OwnerId => IsIfcRoot ? (this[1] as StepId)?.Id ?? 0 : 0;
 
-        public string Description
-            => IsIfcRoot ? (this[3] as StepString)?.AsString() : null;
+        public string Name => IsIfcRoot ? (this[2] as StepString)?.AsString() : null;
 
-        public int Count 
-            => LineData.Count;
+        public string Description => IsIfcRoot ? (this[3] as StepString)?.AsString() : null;
 
-        public StepValue this[int i]
-            => LineData[i];
+        public int Count => LineData.Count;
 
-        public IReadOnlyList<IfcRelation> GetOutgoingRelations()
-            => Graph.GetRelationsFrom(Id);
+        public StepValue this[int i] => LineData[i];
 
-        public IEnumerable<IfcNode> GetAggregatedChildren()
-            => GetOutgoingRelations().OfType<IfcRelationAggregate>().SelectMany(r => r.GetRelatedNodes());
+        public IReadOnlyList<IfcRelation> GetOutgoingRelations() => Graph.GetRelationsFrom(Id);
 
-        public IEnumerable<IfcNode> GetSpatialChildren()
-            => GetOutgoingRelations().OfType<IfcRelationSpatial>().SelectMany(r => r.GetRelatedNodes());
+        public IEnumerable<IfcNode> GetAggregatedChildren() =>
+            GetOutgoingRelations()
+                .OfType<IfcRelationAggregate>()
+                .SelectMany(r => r.GetRelatedNodes());
 
-        public IEnumerable<IfcNode> GetChildren()
-            => GetAggregatedChildren().Concat(GetSpatialChildren()).Distinct();
+        public IEnumerable<IfcNode> GetSpatialChildren() =>
+            GetOutgoingRelations()
+                .OfType<IfcRelationSpatial>()
+                .SelectMany(r => r.GetRelatedNodes());
 
-        public IReadOnlyList<IfcPropSet> GetPropSets()
-            => Graph.PropertySetsByNode.TryGetValue(Id, out var list) ? list : Array.Empty<IfcPropSet>();
+        public IEnumerable<IfcNode> GetChildren() =>
+            GetAggregatedChildren().Concat(GetSpatialChildren()).Distinct();
+
+        public IReadOnlyList<IfcPropSet> GetPropSets() =>
+            Graph.PropertySetsByNode.TryGetValue(Id, out var list)
+                ? list
+                : Array.Empty<IfcPropSet>();
     }
 }

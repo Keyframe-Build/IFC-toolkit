@@ -1,55 +1,51 @@
-﻿using Ara3D.Buffers;
-using Ara3D.StepParser;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Ara3D.Buffers;
+using Ara3D.StepParser;
 
 namespace Ara3D.IfcParser
 {
     public static class Extensions
     {
-        public static void Add<TKey, TValue>(this IDictionary<TKey, List<TValue>> self, TKey key, TValue value)
+        public static void Add<TKey, TValue>(
+            this IDictionary<TKey, List<TValue>> self,
+            TKey key,
+            TValue value
+        )
         {
             if (!self.ContainsKey(key))
                 self[key] = new List<TValue>();
             self[key].Add(value);
         }
 
-        public static uint AsId(this StepValue value)
-            => value is StepUnassigned
-                ? 0u
-                : ((StepId)value).Id;
+        public static uint AsId(this StepValue value) =>
+            value is StepUnassigned ? 0u : ((StepId)value).Id;
 
-        public static string AsString(this StepValue value)
-            => value is StepString ss ? ss.AsString() :
-                value is StepNumber sn ? sn.Value.ToString() :
-                value is StepId si ? si.Id.ToString() :
-                value is StepSymbol ssm ? ssm.Name.ToString() :
-                "";
+        public static string AsString(this StepValue value) =>
+            value is StepString ss ? ss.AsString()
+            : value is StepNumber sn ? sn.Value.ToString()
+            : value is StepId si ? si.Id.ToString()
+            : value is StepSymbol ssm ? ssm.Name.ToString()
+            : "";
 
-        public static double AsNumber(this StepValue value)
-            => value is StepUnassigned
-                ? 0
-                : ((StepNumber)value).Value;
+        public static double AsNumber(this StepValue value) =>
+            value is StepUnassigned ? 0 : ((StepNumber)value).Value;
 
-        public static List<StepValue> AsList(this StepValue value)
-            => value is StepUnassigned
-                ? new List<StepValue>() 
-                : new List<StepValue>() { value };
+        public static List<StepValue> AsList(this StepValue value) =>
+            value is StepUnassigned ? new List<StepValue>() : new List<StepValue>() { value };
 
-        public static List<uint> AsIdList(this StepValue value)
-            => value is StepUnassigned
-                ? new List<uint>()
-                : value.AsList().Select(AsId).ToList();
+        public static List<uint> AsIdList(this StepValue value) =>
+            value is StepUnassigned ? new List<uint>() : value.AsList().Select(AsId).ToList();
 
         // Uses Latin1 encoding (aka ISO-8859-1)
-        // Extended characters converted using an IFC specific system 
-        public static string AsString(this ByteSpan span)
-            => Encoding.Latin1.GetString(span.ToSpan()).IfcToUnicode();
+        // Extended characters converted using an IFC specific system
+        public static string AsString(this ByteSpan span) =>
+            Encoding.Latin1.GetString(span.ToSpan()).IfcToUnicode();
 
         // https://technical.buildingsmart.org/resources/ifcimplementationguidance/string-encoding/
         public static string IfcToUnicode(this string input)
@@ -93,7 +89,7 @@ namespace Ara3D.IfcParser
                     }
                     continue;
                 }
-                
+
                 if (escapeChar == 'X')
                 {
                     if (i < length && input[i] == '\\')
@@ -159,8 +155,7 @@ namespace Ara3D.IfcParser
             return output.ToString();
         }
 
-        public static string AsString(this StepString ss)
-            => ss.Value.AsString();
+        public static string AsString(this StepString ss) => ss.Value.AsString();
 
         public static object ToJsonObject(this StepValue sv)
         {
@@ -174,7 +169,7 @@ namespace Ara3D.IfcParser
 
                     if (attr.Values.Count == 1)
                         return attr.Values[0].ToJsonObject();
-                    
+
                     return attr.Values.Select(ToJsonObject).ToList();
                 }
 
@@ -189,10 +184,10 @@ namespace Ara3D.IfcParser
 
                 case StepRedeclared stepRedeclared:
                     return null;
-                
+
                 case StepString stepString:
                     return stepString.AsString();
-                
+
                 case StepSymbol stepSymbol:
                     var tmp = stepSymbol.Name.AsString();
                     if (tmp == "T")
@@ -200,7 +195,7 @@ namespace Ara3D.IfcParser
                     if (tmp == "F")
                         return false;
                     return tmp;
-                
+
                 case StepUnassigned stepUnassigned:
                     return null;
 
