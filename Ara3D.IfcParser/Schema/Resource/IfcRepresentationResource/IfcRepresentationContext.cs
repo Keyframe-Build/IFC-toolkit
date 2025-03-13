@@ -8,7 +8,5 @@ public class IfcRepresentationContext : IfcNode
     public string? ContextType => (this[1] as StepString)?.Value.ToString();
 
     public IfcRepresentationContext(IfcGraph graph, StepInstance lineData)
-        : base(graph, lineData)
-    {
-    }
+        : base(graph, lineData) { }
 }
