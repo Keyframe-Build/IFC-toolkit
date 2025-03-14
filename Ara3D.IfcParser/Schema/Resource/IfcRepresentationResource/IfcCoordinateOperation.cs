@@ -10,7 +10,9 @@ public class IfcCoordinateOperation : IfcNode
         get
         {
             var targetCRS = this[1] as StepId;
-            return targetCRS == null ? null : Graph[targetCRS] as IfcCoordinateReferenceSystem;
+            return targetCRS == null
+                ? null
+                : Graph.GetNode(targetCRS) as IfcCoordinateReferenceSystem;
         }
     }
 
