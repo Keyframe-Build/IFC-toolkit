@@ -40,6 +40,7 @@ public class IfcGraph
     public IfcGraph(StepDocument d, ILogger logger = null)
     {
         Document = d;
+        List<uint> rootIds = new List<uint>();
 
         logger?.Log("Computing entities");
         foreach (var inst in Document.RawInstances)
@@ -174,6 +175,7 @@ public class IfcGraph
             {
                 var e = d.GetInstanceWithData(inst);
                 AddNode(new IfcMapConversion(this, e));
+                rootIds.Add(e.Id); // MapConversion is a root
             }
             else if (inst.Type.Equals("IFCPROJECTEDCRS"))
             {
@@ -192,15 +194,18 @@ public class IfcGraph
         logger?.Log("Retrieving the roots of all of the spatial relationship");
 
         // Find the root identifiers using the aggregate and spatial relation mappings
-        RootIds = GetAggregateRelations()
-            .Concat<IfcRelation>(GetSpatialRelations())
-            .Where(r => r.From != null)
-            .Select(r => r.From.Id)
-            .Except(
+        RootIds = rootIds
+            .Concat(
                 GetAggregateRelations()
                     .Concat<IfcRelation>(GetSpatialRelations())
-                    .SelectMany<IfcRelation, StepId>(r => r.To.Values.OfType<StepId>())
-                    .Select(id => id.Id)
+                    .Where(r => r.From != null)
+                    .Select(r => r.From.Id)
+                    .Except(
+                        GetAggregateRelations()
+                            .Concat<IfcRelation>(GetSpatialRelations())
+                            .SelectMany<IfcRelation, StepId>(r => r.To.Values.OfType<StepId>())
+                            .Select(id => id.Id)
+                    )
             )
             .Distinct()
             .ToList();
