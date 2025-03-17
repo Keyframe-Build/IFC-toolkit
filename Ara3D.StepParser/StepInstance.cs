@@ -7,11 +7,9 @@ namespace Ara3D.StepParser
         public readonly StepEntity Entity;
         public readonly uint Id;
 
-        public List<StepValue> AttributeValues
-            => Entity.Attributes.Values;
+        public List<StepValue> AttributeValues => Entity.Attributes.Values;
 
-        public string EntityType
-            => Entity?.EntityType.ToString() ?? "";
+        public string EntityType => Entity?.EntityType.ToString() ?? "";
 
         public StepInstance(uint id, StepEntity entity)
         {
@@ -19,17 +17,12 @@ namespace Ara3D.StepParser
             Entity = entity;
         }
 
-        public bool IsEntityType(string str)
-            => EntityType == str;
+        public bool IsEntityType(string str) => EntityType == str;
 
-        public override string ToString()
-            => $"#{Id}={Entity};";
+        public override string ToString() => $"#{Id}={Entity};";
 
-        public int Count 
-            => AttributeValues.Count;
+        public int Count => AttributeValues.Count;
 
-        public StepValue this[int i]
-            => i < Count ? AttributeValues[i] : null;
+        public StepValue this[int i] => i < Count ? AttributeValues[i] : null;
     }
-
 }
