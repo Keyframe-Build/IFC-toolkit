@@ -3,27 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using Ara3D.StepParser;
 
-namespace Ara3D.IfcParser
+namespace Ara3D.IfcParser;
+
+/// <summary>
+/// Always express a 1-to-many relation
+/// </summary>
+public class IfcRelation : IfcEntity
 {
-    /// <summary>
-    /// Always express a 1-to-many relation
-    /// </summary>
-    public class IfcRelation : IfcEntity
+    public StepId From { get; }
+    public StepList To { get; }
+
+    public IfcRelation(IfcGraph graph, StepInstance lineData, StepId from, StepList to)
+        : base(graph, lineData)
     {
-        public StepId From { get; }
-        public StepList To { get; }
-
-        public IfcRelation(IfcGraph graph, StepInstance lineData, StepId from, StepList to)
-            : base(graph, lineData)
-        {
-            From = from;
-            To = to;
-        }
-
-        public IEnumerable<uint> GetRelatedIds()
-            => To.Values.Select(v => v.AsId());
-
-        public IEnumerable<IfcNode> GetRelatedNodes()
-            => Graph.GetNodes(GetRelatedIds());
+        From = from;
+        To = to;
     }
+
+    public IEnumerable<uint> GetRelatedIds() => To.Values.Select(v => v.AsId());
+
+    public IEnumerable<IfcNode> GetRelatedNodes() => Graph.GetNodes(GetRelatedIds());
 }
