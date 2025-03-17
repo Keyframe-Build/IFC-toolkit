@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Ara3D.IfcParser.Schema;
 using Ara3D.Logging;
 using Ara3D.StepParser;
 using Ara3D.Utils;
@@ -181,6 +182,11 @@ public class IfcGraph
             {
                 var e = d.GetInstanceWithData(inst);
                 AddNode(new IfcProjectedCRS(this, e));
+            }
+            else if (inst.Type.Equals("IFCSIUNIT"))
+            {
+                var e = d.GetInstanceWithData(inst);
+                AddNode(new IfcSIUnit(this, e));
             }
             // Everything else
             else
