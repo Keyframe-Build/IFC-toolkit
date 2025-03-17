@@ -1,6 +1,6 @@
 using Ara3D.StepParser;
 
-namespace Ara3D.IfcParser;
+namespace Ara3D.IfcParser.Schema;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1501")]
 public class IfcSite : IfcSpatialStructureElement
