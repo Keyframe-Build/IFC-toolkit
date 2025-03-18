@@ -27,7 +27,7 @@ public class IfcNamedUnit : IfcUnit
 public class IfcSIUnit : IfcNamedUnit
 {
     public StepSymbol? Prefix => this[2] as StepSymbol;
-    public StepSymbol Name => this[3] as StepSymbol;
+    public new StepSymbol Name => this[3] as StepSymbol;
 
     public IfcSIUnit(IfcGraph graph, StepInstance lineData)
         : base(graph, lineData) { }

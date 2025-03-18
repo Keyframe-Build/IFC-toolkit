@@ -6,7 +6,6 @@ namespace Ara3D.IfcParser.Schema;
 
 public class IfcElementQuantity : IfcPropertySetDefinition
 {
-    // IFCELEMENTQUANTITY('32HXQFM09EYOpmaX_lQQjs',#29,'BaseQuantities',$,'',(#5638,#5640,#5642,#5644,#5646,#5648,#5650,#5652));
     public string? MethodOfMeasurement => (this[4] as StepString)?.Value.ToString();
     public IEnumerable<IfcPhysicalQuantity> Quantities
     {

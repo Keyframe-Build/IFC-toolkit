@@ -10,8 +10,14 @@ public class IfcAxis2Placement : IfcPlacement
 
 public class IfcAxis2Placement2D : IfcAxis2Placement
 {
-    public StepId? P => this[0] as StepId;
-    public StepId? Dir => this[1] as StepId;
+    public IfcDirection? RefDirection
+    {
+        get
+        {
+            var direction = this[1] as StepId;
+            return direction == null ? null : Graph.GetNode(direction) as IfcDirection;
+        }
+    }
 
     public IfcAxis2Placement2D(IfcGraph graph, StepInstance lineData)
         : base(graph, lineData) { }
@@ -19,9 +25,22 @@ public class IfcAxis2Placement2D : IfcAxis2Placement
 
 public class IfcAxis2Placement3D : IfcAxis2Placement
 {
-    public StepId? Location => this[0] as StepId;
-    public StepId? Axis => this[1] as StepId;
-    public StepId? RefDirection => this[2] as StepId;
+    public IfcDirection? Axis
+    {
+        get
+        {
+            var direction = this[1] as StepId;
+            return direction == null ? null : Graph.GetNode(direction) as IfcDirection;
+        }
+    }
+    public IfcDirection? RefDirection
+    {
+        get
+        {
+            var direction = this[2] as StepId;
+            return direction == null ? null : Graph.GetNode(direction) as IfcDirection;
+        }
+    }
 
     public IfcAxis2Placement3D(IfcGraph graph, StepInstance lineData)
         : base(graph, lineData) { }
