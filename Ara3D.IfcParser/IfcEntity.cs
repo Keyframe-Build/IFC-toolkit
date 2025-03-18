@@ -24,7 +24,7 @@ public class IfcEntity
         LineData = lineData;
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (obj is IfcEntity other)
             return Id == other.Id;

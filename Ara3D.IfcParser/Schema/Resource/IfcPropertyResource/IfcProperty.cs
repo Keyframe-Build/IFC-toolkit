@@ -12,7 +12,7 @@ public class IfcPropertyAbstraction : IfcNode
 
 public class IfcProperty : IfcPropertyAbstraction
 {
-    public string Name => (this[0] as StepString)?.Value.ToString();
+    public new string Name => (this[0] as StepString).Value.ToString();
     public string? Specification => (this[1] as StepString)?.Value.ToString();
 
     public IfcProperty(IfcGraph graph, StepInstance lineData)
@@ -21,8 +21,8 @@ public class IfcProperty : IfcPropertyAbstraction
 
 public class IfcExtendedProperties : IfcPropertyAbstraction
 {
-    public string? Name => (this[0] as StepString)?.Value.ToString();
-    public string? Description => (this[1] as StepString)?.Value.ToString();
+    public new string? Name => (this[0] as StepString)?.Value.ToString();
+    public new string? Description => (this[1] as StepString)?.Value.ToString();
     public IEnumerable<IfcProperty> Properties
     {
         get
