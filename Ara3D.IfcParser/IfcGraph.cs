@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using Ara3D.IfcParser.Schema;
 using Ara3D.Logging;
 using Ara3D.StepParser;
@@ -15,7 +16,7 @@ namespace Ara3D.IfcParser;
 /// </summary>
 public class IfcGraph
 {
-    public static IfcGraph Load(FilePath fp, ILogger logger = null) =>
+    public static IfcGraph Load(FilePath fp, ILogger? logger = null) =>
         new IfcGraph(new StepDocument(fp, logger), logger);
 
     public StepDocument Document { get; }
@@ -29,6 +30,16 @@ public class IfcGraph
 
     public IReadOnlyList<uint> RootIds { get; }
 
+    private static readonly Dictionary<string, Type> IfcTypeMap = new Dictionary<string, Type>(
+        Assembly
+            .GetExecutingAssembly()
+            .GetTypes()
+            .Where(t =>
+                t.Namespace == "Ara3D.IfcParser.Schema" && typeof(IfcNode).IsAssignableFrom(t)
+            )
+            .ToDictionary(t => t.Name.ToUpper(), t => t)
+    );
+
     public IfcNode AddNode(IfcNode n) => Nodes[n.Id] = n;
 
     public IfcRelation AddRelation(IfcRelation r)
@@ -38,7 +49,7 @@ public class IfcGraph
         return r;
     }
 
-    public IfcGraph(StepDocument d, ILogger logger = null)
+    public IfcGraph(StepDocument d, ILogger? logger = null)
     {
         Document = d;
         List<uint> rootIds = new List<uint>();
@@ -49,150 +60,22 @@ public class IfcGraph
             if (!inst.IsValid())
                 continue;
 
-            // TODO: converting entities into numerical hashes would likely improve performance significantly.
-            // Here we are doing a lot of comparisons.
+            var e = d.GetInstanceWithData(inst);
 
-            // Property Values
-            if (inst.Type.Equals("IFCPROPERTYSINGLEVALUE"))
+            if (IfcTypeMap.TryGetValue(inst.Type.AsString(), out var type))
             {
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcProp(this, e, e[2]));
+                var constructor = type.GetConstructor(
+                    new[] { typeof(IfcGraph), typeof(StepInstance) }
+                );
+                if (constructor != null)
+                {
+                    var node = (IfcNode)constructor.Invoke(new object[] { this, e });
+                    AddNode(node);
+                }
             }
-            else if (inst.Type.Equals("IFCPROPERTYENUMERATEDVALUE"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcProp(this, e, e[2]));
-            }
-            else if (inst.Type.Equals("IFCPROPERTYREFERENCEVALUE"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcProp(this, e, e[3]));
-            }
-            else if (inst.Type.Equals("IFCPROPERTYLISTVALUE"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcProp(this, e, e[2]));
-            }
-            else if (inst.Type.Equals("IFCCOMPLEXPROPERTY"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcProp(this, e, e[3]));
-            }
-            // Quantities which are a treated as a kind of prop
-            // https://iaiweb.lbl.gov/Resources/IFC_Releases/R2x3_final/ifcquantityresource/lexical/ifcphysicalquantity.htm
-            else if (inst.Type.Equals("IFCQUANTITYLENGTH"))
-            {
-                // https://iaiweb.lbl.gov/Resources/IFC_Releases/R2x3_final/ifcquantityresource/lexical/ifcquantitylength.htm
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcProp(this, e, e[3]));
-            }
-            else if (inst.Type.Equals("IFCQUANTITYAREA"))
-            {
-                // https://iaiweb.lbl.gov/Resources/IFC_Releases/R2x3_final/ifcquantityresource/lexical/ifcquantityarea.htm
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcProp(this, e, e[3]));
-            }
-            else if (inst.Type.Equals("IFCQUANTITYVOLUME"))
-            {
-                // https://iaiweb.lbl.gov/Resources/IFC_Releases/R2x3_final/ifcquantityresource/lexical/ifcquantityvolume.htm
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcProp(this, e, e[3]));
-            }
-            else if (inst.Type.Equals("IFCQUANTITYCOUNT"))
-            {
-                // https://iaiweb.lbl.gov/Resources/IFC_Releases/R2x3_final/ifcquantityresource/lexical/ifcquantitycount.htm
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcProp(this, e, e[3]));
-            }
-            else if (inst.Type.Equals("IFCQUANTITYWEIGHT"))
-            {
-                // https://iaiweb.lbl.gov/Resources/IFC_Releases/R2x3_final/ifcquantityresource/lexical/ifcquantityweight.htm
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcProp(this, e, e[3]));
-            }
-            else if (inst.Type.Equals("IFCQUANTITYTIME"))
-            {
-                // https://iaiweb.lbl.gov/Resources/IFC_Releases/R2x3_final/ifcquantityresource/lexical/ifcquantitytime.htm
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcProp(this, e, e[3]));
-            }
-            else if (inst.Type.Equals("IFCPHYSICALCOMPLEXQUANTITY"))
-            {
-                //https://iaiweb.lbl.gov/Resources/IFC_Releases/R2x3_final/ifcquantityresource/lexical/ifcphysicalcomplexquantity.htm
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcProp(this, e, e[2]));
-            }
-            // Property Set (or element quantity)
-            else if (inst.Type.Equals("IFCPROPERTYSET"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcPropSet(this, e, (StepList)e[4]));
-            }
-            else if (inst.Type.Equals("IFCELEMENTQUANTITY"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcPropSet(this, e, (StepList)e[5]));
-            }
-            // Aggregate relation
-            else if (inst.Type.Equals("IFCRELAGGREGATES"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddRelation(new IfcRelationAggregate(this, e, (StepId)e[4], (StepList)e[5]));
-            }
-            // Spatial relation
-            else if (inst.Type.Equals("IFCRELCONTAINEDINSPATIALSTRUCTURE"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddRelation(new IfcRelationSpatial(this, e, (StepId)e[5], (StepList)e[4]));
-            }
-            // Property set relations
-            else if (inst.Type.Equals("IFCRELDEFINESBYPROPERTIES"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddRelation(new IfcPropSetRelation(this, e, (StepId)e[5], (StepList)e[4]));
-            }
-            // Type relations
-            else if (inst.Type.Equals("IFCRELDEFINESBYTYPE"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddRelation(new IfcRelationType(this, e, (StepId)e[5], (StepList)e[4]));
-            }
-            else if (inst.Type.Equals("IFCPROJECT"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcProject(this, e));
-            }
-            else if (inst.Type.Equals("IFCSITE"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcSite(this, e));
-            }
-            else if (inst.Type.Equals("IFCGEOMETRICREPRESENTATIONCONTEXT"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcGeometricRepresentationContext(this, e));
-            }
-            else if (inst.Type.Equals("IFCMAPCONVERSION"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcMapConversion(this, e));
-                rootIds.Add(e.Id); // MapConversion is a root
-            }
-            else if (inst.Type.Equals("IFCPROJECTEDCRS"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcProjectedCRS(this, e));
-            }
-            else if (inst.Type.Equals("IFCSIUNIT"))
-            {
-                var e = d.GetInstanceWithData(inst);
-                AddNode(new IfcSIUnit(this, e));
-            }
-            // Everything else
             else
             {
                 // Simple IFC node: without step entity data.
-                var e = d.GetInstanceWithData(inst);
                 AddNode(new IfcNode(this, e));
             }
         }
@@ -218,15 +101,16 @@ public class IfcGraph
 
         logger?.Log("Creating lookup of property sets");
 
-        foreach (var psr in Relations.OfType<IfcPropSetRelation>())
-        {
-            var ps = psr.PropSet;
-            foreach (var id in psr.GetRelatedIds())
-            {
-                PropertySetsByNode.Add(id, ps);
-            }
-        }
-
+        /*
+                foreach (var psr in Relations.OfType<IfcPropSetRelation>())
+                {
+                    var ps = psr.PropSet;
+                    foreach (var id in psr.GetRelatedIds())
+                    {
+                        PropertySetsByNode.Add(id, ps);
+                    }
+                }
+        */
         logger?.Log("Completed creating model graph");
     }
 
