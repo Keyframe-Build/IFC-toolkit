@@ -2,7 +2,13 @@ using Ara3D.StepParser;
 
 namespace Ara3D.IfcParser.Schema;
 
-public class IfcNamedUnit : IfcNode
+public class IfcUnit : IfcNode
+{
+    public IfcUnit(IfcGraph graph, StepInstance lineData)
+        : base(graph, lineData) { }
+}
+
+public class IfcNamedUnit : IfcUnit
 {
     public IfcDimensionalExponents? Dimensions
     {
