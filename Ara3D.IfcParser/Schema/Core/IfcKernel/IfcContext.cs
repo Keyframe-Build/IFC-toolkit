@@ -4,8 +4,9 @@ using Ara3D.StepParser;
 
 namespace Ara3D.IfcParser.Schema;
 
-public class IfcContext : IfcObject
+public class IfcContext : IfcObjectDefinition
 {
+    public string? ObjectType => (this[4] as StepString)?.Value.ToString();
     public string? LongName => (this[5] as StepString)?.Value.ToString();
     public string? Phase => (this[6] as StepString)?.Value.ToString();
     public IEnumerable<IfcRepresentationContext> RepresentationContexts
@@ -20,7 +21,26 @@ public class IfcContext : IfcObject
                 ?? Enumerable.Empty<IfcRepresentationContext>();
         }
     }
-    public StepId? UnitsInContext => this[8] as StepId;
+    public IEnumerable<IfcUnitAssignment> UnitsInContext
+    {
+        get
+        {
+            var stepList = this[8] as StepList;
+            return stepList
+                    ?.Values?.OfType<StepId>()
+                    .Select(x => Graph.GetNode(x.Id))
+                    .OfType<IfcUnitAssignment>() ?? Enumerable.Empty<IfcUnitAssignment>();
+        }
+    }
+    public IEnumerable<IfcRelDefinesByProperties>? IsDefinedBy
+    {
+        get
+        {
+            return Graph
+                .RelationsByNode.FirstOrDefault(x => x.Key == Id)
+                .Value.OfType<IfcRelDefinesByProperties>();
+        }
+    }
 
     public IfcContext(IfcGraph graph, StepInstance lineData)
         : base(graph, lineData) { }
