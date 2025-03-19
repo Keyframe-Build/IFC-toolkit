@@ -2,7 +2,7 @@ using Ara3D.StepParser;
 
 namespace Ara3D.IfcParser.Schema;
 
-public class IfcRelContainedInSpatialStructure : IfcNode
+public class IfcRelContainedInSpatialStructure : IfcRelationship
 {
     public StepList RelatedElements => this[4] as StepList;
     public StepId RelatingStructure => this[5] as StepId;
@@ -12,7 +12,14 @@ public class IfcRelContainedInSpatialStructure : IfcNode
     {
         // Add the spatial relationship to the graph
         graph.AddRelation(
-            new IfcRelationSpatial(graph, lineData, RelatingStructure, RelatedElements)
+            this
+        //new IfcRelationSpatial(graph, lineData, RelatingStructure, RelatedElements)
         );
     }
+
+    // Implement the From property
+    public override StepId From => RelatingStructure;
+
+    // Implement the To property
+    public override StepList To => RelatedElements;
 }
