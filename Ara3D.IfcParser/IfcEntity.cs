@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Ara3D.IfcParser.Schema;
 using Ara3D.StepParser;
 
 namespace Ara3D.IfcParser;
@@ -55,13 +56,15 @@ public class IfcEntity
 
     public StepValue this[int i] => LineData[i];
 
-    public IReadOnlyList<IfcRelation> GetOutgoingRelations() => Graph.GetRelationsFrom(Id);
+    public IReadOnlyList<IfcRelationship> GetOutgoingRelations() => Graph.GetRelationsFrom(Id);
 
     public IEnumerable<IfcNode> GetAggregatedChildren() =>
-        GetOutgoingRelations().OfType<IfcRelationAggregate>().SelectMany(r => r.GetRelatedNodes());
+        GetOutgoingRelations().OfType<IfcRelAggregates>().SelectMany(r => r.GetRelatedNodes());
 
     public IEnumerable<IfcNode> GetSpatialChildren() =>
-        GetOutgoingRelations().OfType<IfcRelationSpatial>().SelectMany(r => r.GetRelatedNodes());
+        GetOutgoingRelations()
+            .OfType<IfcRelContainedInSpatialStructure>()
+            .SelectMany(r => r.GetRelatedNodes());
 
     public IEnumerable<IfcNode> GetChildren() =>
         GetAggregatedChildren().Concat(GetSpatialChildren()).Distinct();

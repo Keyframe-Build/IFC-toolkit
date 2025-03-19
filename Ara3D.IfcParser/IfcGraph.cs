@@ -22,9 +22,9 @@ public class IfcGraph
     public StepDocument Document { get; }
 
     public Dictionary<uint, IfcNode> Nodes { get; } = new Dictionary<uint, IfcNode>();
-    public List<IfcRelation> Relations { get; } = new List<IfcRelation>();
-    public Dictionary<uint, List<IfcRelation>> RelationsByNode { get; } =
-        new Dictionary<uint, List<IfcRelation>>();
+    public List<IfcRelationship> Relations { get; } = new List<IfcRelationship>();
+    public Dictionary<uint, List<IfcRelationship>> RelationsByNode { get; } =
+        new Dictionary<uint, List<IfcRelationship>>();
     public Dictionary<uint, List<IfcPropSet>> PropertySetsByNode { get; } =
         new Dictionary<uint, List<IfcPropSet>>();
 
@@ -42,7 +42,7 @@ public class IfcGraph
 
     public IfcNode AddNode(IfcNode n) => Nodes[n.Id] = n;
 
-    public IfcRelation AddRelation(IfcRelation r)
+    public IfcRelationship AddRelation(IfcRelationship r)
     {
         Relations.Add(r);
         RelationsByNode.Add(r.From.Id, r);
@@ -82,35 +82,29 @@ public class IfcGraph
 
         logger?.Log("Retrieving the roots of all of the spatial relationship");
 
+        // Find any IfcMapConversion and add them as a root
+        var mapConversionIds = Nodes
+            .Where(kvp => kvp.Value is IfcMapConversion)
+            .Select(kvp => kvp.Key)
+            .ToList();
+
         // Find the root identifiers using the aggregate and spatial relation mappings
-        RootIds = rootIds
+        RootIds = mapConversionIds
             .Concat(
                 GetAggregateRelations()
-                    .Concat<IfcRelation>(GetSpatialRelations())
+                    .Concat<IfcRelationship>(GetSpatialRelations())
                     .Where(r => r.From != null)
                     .Select(r => r.From.Id)
                     .Except(
                         GetAggregateRelations()
-                            .Concat<IfcRelation>(GetSpatialRelations())
-                            .SelectMany<IfcRelation, StepId>(r => r.To.Values.OfType<StepId>())
+                            .Concat<IfcRelationship>(GetSpatialRelations())
+                            .SelectMany<IfcRelationship, StepId>(r => r.To.Values.OfType<StepId>())
                             .Select(id => id.Id)
                     )
             )
             .Distinct()
             .ToList();
 
-        logger?.Log("Creating lookup of property sets");
-
-        /*
-                foreach (var psr in Relations.OfType<IfcPropSetRelation>())
-                {
-                    var ps = psr.PropSet;
-                    foreach (var id in psr.GetRelatedIds())
-                    {
-                        PropertySetsByNode.Add(id, ps);
-                    }
-                }
-        */
         logger?.Log("Completed creating model graph");
     }
 
@@ -166,12 +160,12 @@ public class IfcGraph
 
     public IEnumerable<IfcProp> GetProps() => GetNodes().OfType<IfcProp>();
 
-    public IEnumerable<IfcRelationSpatial> GetSpatialRelations() =>
-        Relations.OfType<IfcRelationSpatial>();
+    public IEnumerable<IfcRelContainedInSpatialStructure> GetSpatialRelations() =>
+        Relations.OfType<IfcRelContainedInSpatialStructure>();
 
-    public IEnumerable<IfcRelationAggregate> GetAggregateRelations() =>
-        Relations.OfType<IfcRelationAggregate>();
+    public IEnumerable<IfcRelAggregates> GetAggregateRelations() =>
+        Relations.OfType<IfcRelAggregates>();
 
-    public IReadOnlyList<IfcRelation> GetRelationsFrom(uint id) =>
-        RelationsByNode.TryGetValue(id, out var list) ? list : Array.Empty<IfcRelation>();
+    public IReadOnlyList<IfcRelationship> GetRelationsFrom(uint id) =>
+        RelationsByNode.TryGetValue(id, out var list) ? list : Array.Empty<IfcRelationship>();
 }
