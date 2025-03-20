@@ -25,8 +25,13 @@ public class IfcGraph
     public List<IfcRelationship> Relations { get; } = new List<IfcRelationship>();
     public Dictionary<uint, List<IfcRelationship>> RelationsByNode { get; } =
         new Dictionary<uint, List<IfcRelationship>>();
-    public Dictionary<uint, List<IfcPropSet>> PropertySetsByNode { get; } =
-        new Dictionary<uint, List<IfcPropSet>>();
+
+    /*
+public Dictionary<uint, List<IfcPropSet>> PropertySetsByNode { get; } =
+    new Dictionary<uint, List<IfcPropSet>>();
+    */
+    public Dictionary<uint, List<StepId>> PropertySetsByNode { get; } =
+        new Dictionary<uint, List<StepId>>();
 
     public IReadOnlyList<uint> RootIds { get; }
 
@@ -47,6 +52,19 @@ public class IfcGraph
         Relations.Add(r);
         RelationsByNode.Add(r.From.Id, r);
         return r;
+    }
+
+    public void AddPropertySetRelation(IfcRelDefinesByProperties r)
+    {
+        foreach (var id in r.To.Values.OfType<StepId>())
+        {
+            if (!PropertySetsByNode.TryGetValue(id.Id, out var list))
+            {
+                PropertySetsByNode[id.Id] = list = new List<StepId>();
+            }
+
+            list.Add(r.From);
+        }
     }
 
     public IfcGraph(StepDocument d, ILogger? logger = null)
@@ -70,7 +88,21 @@ public class IfcGraph
                 if (constructor != null)
                 {
                     var node = (IfcNode)constructor.Invoke(new object[] { this, e });
-                    AddNode(node);
+                    switch (node)
+                    {
+                        case IfcRelAggregates r:
+                            AddRelation(r);
+                            break;
+                        case IfcRelContainedInSpatialStructure r:
+                            AddRelation(r);
+                            break;
+                        case IfcRelDefinesByProperties r:
+                            AddPropertySetRelation(r);
+                            break;
+                        default:
+                            AddNode(node);
+                            break;
+                    }
                 }
             }
             else
@@ -155,10 +187,6 @@ public class IfcGraph
     }
 
     public IEnumerable<IfcNode> GetSources() => RootIds.Select(GetNode);
-
-    public IEnumerable<IfcPropSet> GetPropSets() => GetNodes().OfType<IfcPropSet>();
-
-    public IEnumerable<IfcProp> GetProps() => GetNodes().OfType<IfcProp>();
 
     public IEnumerable<IfcRelContainedInSpatialStructure> GetSpatialRelations() =>
         Relations.OfType<IfcRelContainedInSpatialStructure>();
