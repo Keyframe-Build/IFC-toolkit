@@ -2,7 +2,7 @@ using Ara3D.StepParser;
 
 namespace Ara3D.IfcParser.Schema;
 
-public class IfcSpatialElement : IfcProduct
+public abstract class IfcSpatialElement : IfcProduct
 {
     public string? LongName => (this[7] as StepString)?.Value.ToString();
 

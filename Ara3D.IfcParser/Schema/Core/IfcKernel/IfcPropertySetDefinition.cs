@@ -4,7 +4,7 @@ using Ara3D.StepParser;
 
 namespace Ara3D.IfcParser.Schema;
 
-public class IfcPropertySetDefinition : IfcPropertyDefinition
+public abstract class IfcPropertySetDefinition : IfcPropertyDefinition
 {
     public IEnumerable<IfcRelDefinesByProperties>? DefinesOccurrence
     {

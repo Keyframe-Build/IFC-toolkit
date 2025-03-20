@@ -4,7 +4,7 @@ using Ara3D.StepParser;
 
 namespace Ara3D.IfcParser.Schema;
 
-public class IfcContext : IfcObjectDefinition
+public abstract class IfcContext : IfcObjectDefinition
 {
     public string? ObjectType => (this[4] as StepString)?.Value.ToString();
     public string? LongName => (this[5] as StepString)?.Value.ToString();
