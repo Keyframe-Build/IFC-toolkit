@@ -8,11 +8,7 @@ public class IfcRelAggregates : IfcRelationship
     public StepList RelatedObjects => this[5] as StepList;
 
     public IfcRelAggregates(IfcGraph graph, StepInstance lineData)
-        : base(graph, lineData)
-    {
-        // Add the relationship to the graph
-        graph.AddRelation(this);
-    }
+        : base(graph, lineData) { }
 
     // Implement the From property
     public override StepId From => RelatingObject;

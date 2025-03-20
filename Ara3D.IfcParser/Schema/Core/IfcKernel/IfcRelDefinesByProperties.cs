@@ -28,15 +28,11 @@ public class IfcRelDefinesByProperties : IfcRelationship
     }
 
     public IfcRelDefinesByProperties(IfcGraph graph, StepInstance lineData)
-        : base(graph, lineData)
-    {
-        // Add the relationship to the graph
-        graph.AddRelation(this);
-    }
+        : base(graph, lineData) { }
 
     // Implement the From property
     public override StepId From => this[5] as StepId;
 
     // Implement the To property
-    public override StepList? To => this[4] as StepList;
+    public override StepList To => this[4] as StepList;
 }

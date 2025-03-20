@@ -8,14 +8,7 @@ public class IfcRelContainedInSpatialStructure : IfcRelationship
     public StepId RelatingStructure => this[5] as StepId;
 
     public IfcRelContainedInSpatialStructure(IfcGraph graph, StepInstance lineData)
-        : base(graph, lineData)
-    {
-        // Add the spatial relationship to the graph
-        graph.AddRelation(
-            this
-        //new IfcRelationSpatial(graph, lineData, RelatingStructure, RelatedElements)
-        );
-    }
+        : base(graph, lineData) { }
 
     // Implement the From property
     public override StepId From => RelatingStructure;
