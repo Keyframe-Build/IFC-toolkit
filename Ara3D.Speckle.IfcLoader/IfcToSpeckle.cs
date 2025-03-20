@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Reflection;
 using Ara3D.IfcLoader;
 using Ara3D.IfcParser;
+using Ara3D.IfcParser.Schema;
 using Ara3D.Utils;
 using Objects.Geometry;
 using Objects.Other;
@@ -64,10 +65,11 @@ namespace Ara3D.Speckle.IfcLoader
             var rm = new RenderMaterial();
             var color = (IfcColor*)mesh.Color;
             rm.diffuseColor = Color.FromArgb(
-                (int)(color->A * 255), 
-                (int)(color->R * 255), 
+                (int)(color->A * 255),
+                (int)(color->R * 255),
                 (int)(color->G * 255),
-                (int)(color->B * 255));
+                (int)(color->B * 255)
+            );
             r["renderMaterial"] = rm;
             return r;
         }
@@ -81,57 +83,127 @@ namespace Ara3D.Speckle.IfcLoader
             return c;
         }
 
-        public static Dictionary<string, object> ToSpeckleDictionary(this IfcPropSet ps)
+        public static Dictionary<string, object?> ConvertPropertySets(this IfcNode node)
         {
-            var d = new Dictionary<string, object>();
-            foreach (var p in ps.GetProperties())
-                d[p.Name] = p.Value.ToJsonObject();
+            var result = new Dictionary<string, object?>();
+            foreach (var p in node.GetPropertySets())
+            {
+                var name = p.Name;
+                if (string.IsNullOrWhiteSpace(name))
+                    name = $"#{p.Id}";
+
+                switch (p)
+                {
+                    case IfcPropertySet ps:
+                        var psDict = ToSpeckleDictionary(ps);
+                        if (psDict.Count > 0)
+                            result[name] = psDict;
+                        break;
+                    case IfcElementQuantity eq:
+                        var eqDict = ToSpeckleDictionary(eq);
+                        if (eqDict.Count > 0)
+                            result[name] = eqDict;
+                        break;
+                    default:
+                        throw new NotImplementedException(
+                            $"PropertySet type {p.GetType()} not implemented"
+                        );
+                }
+            }
+
+            return result;
+        }
+
+        public static Dictionary<string, object?> ToSpeckleDictionary(this IfcPropertySet ps)
+        {
+            var d = new Dictionary<string, object?>();
+            foreach (var prop in ps.HasProperties)
+            {
+                switch (prop)
+                {
+                    case IfcPropertySingleValue psv:
+                        d[psv.Name] = psv.NominalValue.ToJsonObject();
+                        break;
+                    default:
+                        throw new NotImplementedException(
+                            $"Property type {prop.GetType()} not implemented"
+                        );
+                }
+            }
+            return d;
+        }
+
+        public static Dictionary<string, object?> ToSpeckleDictionary(this IfcElementQuantity eq)
+        {
+            var d = new Dictionary<string, object?>();
+            foreach (var item in eq.Quantities)
+            {
+                switch (item)
+                {
+                    case IfcQuantityArea qa:
+                        d[qa.Name] = qa.AreaValue;
+                        break;
+                    case IfcQuantityCount qc:
+                        d[qc.Name] = qc.CountValue;
+                        break;
+                    case IfcQuantityLength ql:
+                        d[ql.Name] = ql.LengthValue;
+                        break;
+                    case IfcQuantityNumber qn:
+                        d[qn.Name] = qn.NumberValue;
+                        break;
+                    case IfcQuantityTime qt:
+                        d[qt.Name] = qt.TimeValue;
+                        break;
+                    case IfcQuantityVolume qv:
+                        d[qv.Name] = qv.VolumeValue;
+                        break;
+                    case IfcQuantityWeight qw:
+                        d[qw.Name] = qw.WeightValue;
+                        break;
+                    default:
+                        throw new NotImplementedException(
+                            $"Quantity type {item.GetType()} not implemented"
+                        );
+                }
+            }
             return d;
         }
 
         public static Base ToSpeckle(this IfcFile file, IfcNode n)
         {
             var b = new Base();
-            if (n is IfcPropSet ps)
-            {
-                b["Name"] = ps.Name;
-                b["GlobalId"] = ps.Guid;
-            }
 
             // https://github.com/specklesystems/speckle-server/issues/1180
             b["ifc_type"] = n.Type;
 
-            // This is required because "speckle_type" has no setter, but is backed by a private field.  
+            // This is required because "speckle_type" has no setter, but is backed by a private field.
             var baseType = typeof(Base);
-            var typeField = baseType.GetField("_type", BindingFlags.Instance | BindingFlags.NonPublic);
+            var typeField = baseType.GetField(
+                "_type",
+                BindingFlags.Instance | BindingFlags.NonPublic
+            );
             typeField?.SetValue(b, n.Type);
 
-            // Guid is null for property values, and other Ifc entities not derived from IfcRoot 
+            // Guid is null for property values, and other Ifc entities not derived from IfcRoot
             b.applicationId = n.Guid;
 
             // This is the express ID used to identify an entity within a file.
-            b["expressID"] = n.Id;      
-            
-            // Even if there is no geometry, this will return an empty collection. 
+            b["expressID"] = n.Id;
+
+            // Even if there is no geometry, this will return an empty collection.
             var c = file.Model.GetGeometry(n.Id).ToSpeckle();
             if (c.elements.Count > 0)
                 b["displayValue"] = c.elements;
 
-            // Create the children 
+            // Create the children
             var children = n.GetChildren().Select(file.ToSpeckle).ToList();
             b["elements"] = children;
 
-            // Add the properties
-            foreach (var p in n.GetPropSets())
+            var propSets = n.ConvertPropertySets();
+            if (propSets.Any())
             {
-                // Only when there are actually some properties.
-                if (p.NumProperties > 0)
-                {
-                    var name = p.Name;
-                    if (name.IsNullOrWhiteSpace())
-                        name = $"#{p.Id}";
-                    b[name] = p.ToSpeckleDictionary();
-                }
+                b["properties"] = propSets;
             }
 
             // TODO: add the "type" properties
