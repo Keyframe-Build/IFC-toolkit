@@ -4,7 +4,7 @@ using Ara3D.StepParser;
 
 namespace Ara3D.IfcParser.Schema;
 
-public class IfcObject : IfcObjectDefinition
+public abstract class IfcObject : IfcObjectDefinition
 {
     public string? ObjectType => (this[4] as StepString)?.Value.ToString();
 
@@ -16,8 +16,9 @@ public class IfcObject : IfcObjectDefinition
         get
         {
             return Graph
-                .RelationsByNode.FirstOrDefault(x => x.Key == Id)
-                .Value.OfType<IfcRelDefinesByType>();
+                    .RelationsByNode.FirstOrDefault(x => x.Key == Id)
+                    .Value?.OfType<IfcRelDefinesByType>()
+                ?? Enumerable.Empty<IfcRelDefinesByType>();
         }
     }
 
@@ -26,8 +27,9 @@ public class IfcObject : IfcObjectDefinition
         get
         {
             return Graph
-                .RelationsByNode.FirstOrDefault(x => x.Key == Id)
-                .Value.OfType<IfcRelDefinesByProperties>();
+                    .RelationsByNode.FirstOrDefault(x => x.Key == Id)
+                    .Value?.OfType<IfcRelDefinesByProperties>()
+                ?? Enumerable.Empty<IfcRelDefinesByProperties>();
         }
     }
 }

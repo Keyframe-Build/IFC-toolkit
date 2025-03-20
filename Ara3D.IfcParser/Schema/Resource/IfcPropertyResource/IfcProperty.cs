@@ -42,7 +42,7 @@ public class IfcExtendedProperties : IfcPropertyAbstraction
 public class IfcPropertySingleValue : IfcProperty
 {
     // IFCPROPERTYSINGLEVALUE('Cutout',$,IFCLABEL('Flange_notch'),$);
-    public string? NominalValue => (this[2] as StepString)?.Value.ToString();
+    public StepEntity? NominalValue => this[2] as StepEntity;
     public string? Unit => (this[3] as StepString)?.Value.ToString();
 
     public IfcPropertySingleValue(IfcGraph graph, StepInstance lineData)

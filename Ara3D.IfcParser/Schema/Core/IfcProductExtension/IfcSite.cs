@@ -9,7 +9,7 @@ public class IfcSite : IfcSpatialStructureElement
     public string? RefLongitude => (this[10] as StepList)?.ToPlaneAngle();
     public double? RefElevation => (this[11] as StepNumber)?.Value;
     public string? LandTitleNumber => (this[12] as StepString)?.Value.ToString();
-    public StepId? SiteAddress => this[13] as StepId;
+    public StepId? SiteAddress => this[13] as StepId; // TODO
 
     public IfcSite(IfcGraph graph, StepInstance lineData)
         : base(graph, lineData) { }
