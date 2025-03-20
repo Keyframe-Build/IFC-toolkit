@@ -4,7 +4,7 @@ using Ara3D.StepParser;
 
 namespace Ara3D.IfcParser.Schema;
 
-public class IfcPhysicalQuantity : IfcNode
+public abstract class IfcPhysicalQuantity : IfcNode
 {
     public new string Name => (this[0] as StepString).Value.ToString();
     public new string? Description => (this[1] as StepString)?.Value.ToString();
@@ -13,7 +13,7 @@ public class IfcPhysicalQuantity : IfcNode
         : base(graph, lineData) { }
 }
 
-public class IfcPhysicalSimpleQuantity : IfcPhysicalQuantity
+public abstract class IfcPhysicalSimpleQuantity : IfcPhysicalQuantity
 {
     public string? Unit => (this[2] as StepString)?.Value.ToString();
 
