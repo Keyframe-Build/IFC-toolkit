@@ -12,8 +12,8 @@ public class IfcProjectedCRS : IfcCoordinateReferenceSystem
     {
         get
         {
-            var unit = this[6] as StepId;
-            return unit == null ? null : Graph.GetNode(unit) as IfcNamedUnit;
+            var stepId = this[6] as StepId;
+            return stepId != null ? Graph.GetNode(stepId) as IfcNamedUnit : null;
         }
     }
 
