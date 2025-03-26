@@ -203,14 +203,4 @@ public static class Extensions
                 throw new ArgumentOutOfRangeException(nameof(sv));
         }
     }
-
-    public static string ToPlaneAngle(this StepList sl)
-    {
-        var degrees = sl.Values[0].AsNumber();
-        var minutes = sl.Values[1].AsNumber();
-        var seconds = sl.Values[2].AsNumber();
-        var m_seconds = sl.Values[3].AsNumber();
-
-        return $"{degrees}° {minutes}' {seconds}\" {m_seconds}";
-    }
 }
