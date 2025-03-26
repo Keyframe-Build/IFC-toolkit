@@ -25,14 +25,10 @@ public class IfcGraph
     public List<IfcRelationship> Relations { get; } = new List<IfcRelationship>();
     public Dictionary<uint, List<IfcRelationship>> RelationsByNode { get; } =
         new Dictionary<uint, List<IfcRelationship>>();
-
-    /*
-public Dictionary<uint, List<IfcPropSet>> PropertySetsByNode { get; } =
-    new Dictionary<uint, List<IfcPropSet>>();
-    */
-    public Dictionary<uint, List<StepId>> PropertySetsByNode { get; } =
-        new Dictionary<uint, List<StepId>>();
-
+    public Dictionary<uint, List<uint>> PropertySetsByNode { get; } =
+        new Dictionary<uint, List<uint>>();
+    public Dictionary<uint, List<uint>> CoordinateOperations { get; } =
+        new Dictionary<uint, List<uint>>();
     public IReadOnlyList<uint> RootIds { get; }
 
     private static readonly Dictionary<string, Type> IfcTypeMap = new Dictionary<string, Type>(
@@ -56,15 +52,25 @@ public Dictionary<uint, List<IfcPropSet>> PropertySetsByNode { get; } =
 
     public void AddPropertySetRelation(IfcRelDefinesByProperties r)
     {
-        foreach (var id in r.To.Values.OfType<StepId>())
+        foreach (var id in r.To.Values.OfType<uint>())
         {
-            if (!PropertySetsByNode.TryGetValue(id.Id, out var list))
+            if (!PropertySetsByNode.TryGetValue(id, out var list))
             {
-                PropertySetsByNode[id.Id] = list = new List<StepId>();
+                PropertySetsByNode[id] = list = new List<uint>();
             }
 
-            list.Add(r.From);
+            list.Add(r.From.Id);
         }
+    }
+
+    public void AddCoordinateOperation(uint from, uint to)
+    {
+        if (!CoordinateOperations.TryGetValue(from, out var list))
+        {
+            list = new List<uint>();
+            CoordinateOperations[from] = list;
+        }
+        list.Add(to);
     }
 
     public IfcGraph(StepDocument d, ILogger? logger = null)
@@ -99,6 +105,10 @@ public Dictionary<uint, List<IfcPropSet>> PropertySetsByNode { get; } =
                         case IfcRelDefinesByProperties r:
                             AddPropertySetRelation(r);
                             break;
+                        case IfcMapConversion mc:
+                            AddCoordinateOperation(mc.SourceCRS.Id, mc.Id);
+                            AddNode(mc);
+                            break;
                         default:
                             AddNode(node);
                             break;
@@ -114,25 +124,16 @@ public Dictionary<uint, List<IfcPropSet>> PropertySetsByNode { get; } =
 
         logger?.Log("Retrieving the roots of all of the spatial relationship");
 
-        // Find any IfcMapConversion and add them as a root
-        var mapConversionIds = Nodes
-            .Where(kvp => kvp.Value is IfcMapConversion)
-            .Select(kvp => kvp.Key)
-            .ToList();
-
         // Find the root identifiers using the aggregate and spatial relation mappings
-        RootIds = mapConversionIds
-            .Concat(
+        RootIds = GetAggregateRelations()
+            .Concat<IfcRelationship>(GetSpatialRelations())
+            .Where(r => r.From != null)
+            .Select(r => r.From.Id)
+            .Except(
                 GetAggregateRelations()
                     .Concat<IfcRelationship>(GetSpatialRelations())
-                    .Where(r => r.From != null)
-                    .Select(r => r.From.Id)
-                    .Except(
-                        GetAggregateRelations()
-                            .Concat<IfcRelationship>(GetSpatialRelations())
-                            .SelectMany<IfcRelationship, StepId>(r => r.To.Values.OfType<StepId>())
-                            .Select(id => id.Id)
-                    )
+                    .SelectMany<IfcRelationship, StepId>(r => r.To.Values.OfType<StepId>())
+                    .Select(id => id.Id)
             )
             .Distinct()
             .ToList();

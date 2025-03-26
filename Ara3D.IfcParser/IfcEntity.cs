@@ -73,7 +73,7 @@ public class IfcEntity
     {
         if (Graph.PropertySetsByNode.TryGetValue(Id, out var ps))
         {
-            return ps.Select(p => Graph.GetNode(p.Id)).OfType<IfcPropertySetDefinition>().ToList();
+            return ps.Select(id => Graph.GetNode(id)).OfType<IfcPropertySetDefinition>().ToList();
         }
         else
         {
