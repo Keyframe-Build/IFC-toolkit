@@ -90,8 +90,7 @@ public class IfcPhysicalComplexQuantity : IfcPhysicalQuantity
     {
         get
         {
-            var quantities = this[3] as StepList;
-            return quantities
+            return (this[3] as StepList)
                     ?.Values?.OfType<StepId>()
                     .Select(x => Graph.GetNode(x.Id))
                     .OfType<IfcPhysicalQuantity>() ?? Enumerable.Empty<IfcPhysicalQuantity>();

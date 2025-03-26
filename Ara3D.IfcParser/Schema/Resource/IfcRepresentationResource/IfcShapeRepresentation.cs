@@ -1,0 +1,10 @@
+using Ara3D.IfcParser;
+using Ara3D.StepParser;
+
+namespace Ara3D.IfcParser.Schema;
+
+public class IfcShapeRepresentation : IfcShapeModel
+{
+    public IfcShapeRepresentation(IfcGraph graph, StepInstance lineData)
+        : base(graph, lineData) { }
+}
