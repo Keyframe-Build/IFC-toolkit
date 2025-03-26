@@ -5,8 +5,10 @@ namespace Ara3D.IfcParser.Schema;
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1501")]
 public class IfcSite : IfcSpatialStructureElement
 {
-    public string? RefLatitude => (this[9] as StepList)?.ToPlaneAngle();
-    public string? RefLongitude => (this[10] as StepList)?.ToPlaneAngle();
+    public IfcCompoundPlaneAngleMeasure? RefLatitude =>
+        (this[9] as StepList) is StepList list ? new IfcCompoundPlaneAngleMeasure(list) : null;
+    public IfcCompoundPlaneAngleMeasure? RefLongitude =>
+        (this[10] as StepList) is StepList list ? new IfcCompoundPlaneAngleMeasure(list) : null;
     public double? RefElevation => (this[11] as StepNumber)?.Value;
     public string? LandTitleNumber => (this[12] as StepString)?.Value.ToString();
     public StepId? SiteAddress => this[13] as StepId; // TODO
