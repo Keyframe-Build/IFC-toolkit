@@ -32,7 +32,7 @@ public class IfcQuantityArea : IfcPhysicalSimpleQuantity
 
 public class IfcQuantityCount : IfcPhysicalSimpleQuantity
 {
-    public int CountValue => (this[3] as StepInteger).Value;
+    public int CountValue => (this[3] as StepNumber).IntValue;
     public string? Formula => (this[3] as StepString)?.Value.ToString();
 
     public IfcQuantityCount(IfcGraph graph, StepInstance lineData)

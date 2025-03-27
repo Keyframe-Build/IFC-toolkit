@@ -11,10 +11,10 @@ public class IfcCompoundPlaneAngleMeasure
 
     public IfcCompoundPlaneAngleMeasure(StepList list)
     {
-        Degrees = (list.Values[0] as StepInteger).Value;
-        Minutes = (list.Values[1] as StepInteger).Value;
-        Seconds = (list.Values[2] as StepInteger).Value;
-        MillionthSeconds = (list.Values[3] as StepInteger)?.Value;
+        Degrees = (list.Values[0] as StepNumber).IntValue;
+        Minutes = (list.Values[1] as StepNumber).IntValue;
+        Seconds = (list.Values[2] as StepNumber).IntValue;
+        MillionthSeconds = list.Values.Count > 3 ? (list.Values[3] as StepNumber)?.IntValue : null;
     }
 
     public override string ToString()

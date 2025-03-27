@@ -6,7 +6,7 @@ namespace Ara3D.IfcParser.Schema;
 
 public class IfcGeometricRepresentationContext : IfcRepresentationContext
 {
-    public int? CoordinateSpaceDimension => (this[2] as StepInteger)?.Value;
+    public int? CoordinateSpaceDimension => (this[2] as StepNumber)?.IntValue;
     public double? Precision => (this[3] as StepNumber)?.Value;
     public IfcAxis2Placement WorldCoordinateSystem
     {
