@@ -1,29 +1,39 @@
-﻿namespace Ara3D.IfcLoader
+﻿using System.Runtime.InteropServices;
+
+namespace Ara3D.IfcLoader;
+
+public sealed class IfcMesh(IntPtr mesh)
 {
-    public class IfcMesh
+    public int VerticesCount => WebIfc.GetNumVertices(mesh);
+
+    public unsafe ReadOnlySpan<IfcVertex> Vertices
     {
-        public readonly uint Id;
-        public readonly IntPtr ApiPtr;
-        public readonly IntPtr MeshPtr;
-
-        public readonly int NumVertices;
-        public readonly int NumIndices;
-        public readonly IntPtr Vertices;
-        public readonly IntPtr Indices;
-        public readonly IntPtr Color;
-        public readonly IntPtr Transform;
-
-        public IfcMesh(IntPtr apiPtr, IntPtr meshPtr)
+        get
         {
-            ApiPtr = apiPtr;
-            MeshPtr = meshPtr;
-            Id = WebIfcDll.GetMeshId(ApiPtr, MeshPtr);
-            NumIndices = WebIfcDll.GetNumIndices(ApiPtr, MeshPtr);
-            NumVertices = WebIfcDll.GetNumVertices(ApiPtr, MeshPtr);
-            Vertices = WebIfcDll.GetVertices(ApiPtr, MeshPtr);
-            Indices = WebIfcDll.GetIndices(ApiPtr, MeshPtr);
-            Color = WebIfcDll.GetColor(ApiPtr, MeshPtr);
-            Transform = WebIfcDll.GetTransform(ApiPtr, MeshPtr);
+            IfcVertex* ptr = (IfcVertex*)WebIfc.GetVertices(mesh);
+            return new ReadOnlySpan<IfcVertex>(ptr, VerticesCount);
         }
     }
+
+    public unsafe ReadOnlySpan<double> Transform
+    {
+        get
+        {
+            double* ptr = (double*)WebIfc.GetTransform(mesh);
+            return new ReadOnlySpan<double>(ptr, 16);
+        }
+    }
+
+    public int IndicesCount => WebIfc.GetNumIndices(mesh);
+
+    public unsafe ReadOnlySpan<int> Indices
+    {
+        get
+        {
+            var ptr = (int*)WebIfc.GetIndices(mesh);
+            return new ReadOnlySpan<int>(ptr, IndicesCount);
+        }
+    }
+
+    public IfcColor Color => Marshal.PtrToStructure<IfcColor>(WebIfc.GetColor(mesh));
 }

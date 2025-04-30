@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -17,9 +18,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="libs/web-ifc-dll.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <Link>web-ifc-dll.dll</Link>
+    <None Include="libs/web-ifc.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>web-ifc.dll</Link>
+    </None>
+    <None Include="libs/libweb-ifc.so"> 
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>libweb-ifc.so</TargetPath>
     </None>
   </ItemGroup>
 </Project>
